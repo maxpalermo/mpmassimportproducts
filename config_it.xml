@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>mpmassimportproducts</name>
+    <displayName><![CDATA[MP Importazione massiva prodotti]]></displayName>
+    <version><![CDATA[0.1.0]]></version>
+    <description><![CDATA[Questo modulo importa i prodotti tramite i plugin a disposizione.]]></description>
+    <author><![CDATA[Massimiliano Palermo]]></author>
+    <tab><![CDATA[administration]]></tab>
+	<confirmUninstall><![CDATA[Are you sure you want uninstall this module?]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+</module>
