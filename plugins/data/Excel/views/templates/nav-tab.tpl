@@ -18,7 +18,7 @@
     <div class="btn-group d-flex justify-content-center" role="group" aria-label="Button group">
         <button type="button" class="btn btn-primary" onclick="randomInsert();">{l s='Random insert' mod='mpmassimportproducts'}</button>
         <button type="button" class="btn btn-secondary" onclick="randomCreateExcel();">{l s='Random create Excel' mod='mpmassimportproducts'}</button>
-        <button type=" button" class="btn btn-success">{l s='Button 3' mod='mpmassimportproducts'}</button>
+        <button type=" button" class="btn btn-success" onclick="loadTestExcel();">{l s='Load Test EXCEL' mod='mpmassimportproducts'}</button>
     </div>
 {/block}
 
@@ -35,9 +35,10 @@
                         params: []
                     }
                 )
-                .done(function(response) {
-                    alert('Done' + JSON.stringify(response));
-                })
+                .done(
+                    function(response) {
+                        alert('Done' + JSON.stringify(response));
+                    })
                 .fail(function(response) {
                     alert('Fail');
                 });
@@ -54,12 +55,35 @@
                         params: []
                     }
                 )
-                .done(function(response) {
-                    alert('Done' + JSON.stringify(response));
-                })
-                .fail(function(response) {
-                    alert('Fail');
-                });
+                .done(
+                    function(response) {
+                        alert('Done' + JSON.stringify(response));
+                    })
+                .fail(
+                    function(response) {
+                        alert('Fail');
+                    });
+        }
+
+        function loadTestExcel() {
+            $.post(
+                    "{Context::getContext()->link->getAdminLink('AdminMpMassImportProducts')}",
+                    {
+                        ajax: 1,
+                        action: 'PluginCallback',
+                        plugin: 'Excel',
+                        callback_method: 'loadExcel',
+                        params: []
+                    }
+                )
+                .done(
+                    function(response) {
+                        alert('Done' + JSON.stringify(response));
+                    })
+                .fail(
+                    function(response) {
+                        alert('Fail');
+                    });
         }
     </script>
 {/block}

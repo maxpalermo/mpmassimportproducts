@@ -1,6 +1,4 @@
 <?php
-use MpSoft\MpMassImportProducts\Models\ModelMassImportData;
-
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -25,6 +23,7 @@ if (!defined('_PS_VERSION_')) {
 
 require_once dirname(__FILE__) . '/vendor/autoload.php';;
 
+use MpSoft\MpMassImportProducts\Models\ModelMassImportData;
 use MpSoft\MpMassImportProducts\Module\ModuleTemplate;
 use MpSoft\MpMassImportProducts\Plugins\Plugin;
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;

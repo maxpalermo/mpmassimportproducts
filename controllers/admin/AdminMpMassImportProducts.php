@@ -40,8 +40,8 @@ class AdminMpMassImportProductsController extends ModuleAdminController
         unset($this->page_header_toolbar_btn['new']);
         $this->page_header_toolbar_btn = [
             'configure' => [
-                'href' => $this->context->link->getAdminLink('AdminMpShelves') . '&action=configure',
-                'desc' => $this->l('Configuration'),
+                'href' => $this->context->link->getAdminLink($this->controller_name) . '&action=configure',
+                'desc' => $this->trans('Configuration'),
             ],
         ];
     }
@@ -52,8 +52,8 @@ class AdminMpMassImportProductsController extends ModuleAdminController
         unset($this->toolbar_btn['new']);
         $this->toolbar_btn = [
             'configure' => [
-                'href' => $this->context->link->getAdminLink('AdminMpShelves') . '&action=configure',
-                'desc' => $this->l('Configuration'),
+                'href' => $this->context->link->getAdminLink($this->controller_name) . '&action=configure',
+                'desc' => $this->trans('Configuration'),
             ],
         ];
     }
@@ -75,18 +75,18 @@ class AdminMpMassImportProductsController extends ModuleAdminController
     {
         $this->fields_form = [
             'legend' => [
-                'title' => $this->l('Product'),
+                'title' => $this->trans('Product'),
             ],
             'input' => [
                 [
                     'type' => 'text',
-                    'label' => $this->l('Location'),
+                    'label' => $this->trans('Location'),
                     'name' => 'location',
                     'required' => true,
                 ],
             ],
             'submit' => [
-                'title' => $this->l('Save'),
+                'title' => $this->trans('Save'),
             ],
         ];
 
