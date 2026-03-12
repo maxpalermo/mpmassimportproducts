@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -20,6 +21,7 @@
 
 namespace MpSoft\MpMassImportProducts\Module;
 
+use MpSoft\MpMassImportProducts\Helpers\GetTwigEnvironment;
 use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
 
 if (!defined('_PS_VERSION_')) {
@@ -41,37 +43,53 @@ class ModuleTemplate extends \Module
     /**
      * Install a new menu
      *
-     * @param string $name Tab name
+     * @param string $tabLabel Tab label, if multilang [<id_lang> => <label>]
      * @param string $module_name Module name
-     * @param string $parent Parent tab name
-     * @param string $controller Controller class name
-     * @param string $icon Material Icon name
-     * @param string $wording Wording type
-     * @param string $wording_domain Wording domain
+     * @param string $parentTab Parent tab name
+     * @param string $adminController Controller class name
+     * @param string $icon Material Icons icon label
      * @param bool $active If true, Tab menu will be shown
      * @param bool $enabled If true Tab menu is enabled
+     * @param string $wording_domain Wording domain
+     * @param string $wording Wording type
      *
      * @return bool True if successful, False otherwise
      */
     public function installModuleTab(
-        string $name,
+        string|array $tabLabel,
         string $module_name,
-        string $parent,
-        string $controller,
+        string $parentTab,
+        string $adminController,
         string $icon = '',
         int $position = -1,
         string $route_name = '',
         bool $active = true,
-        bool $enabled = true
+        bool $enabled = true,
+        string $wording_domain = '',
+        string $wording = ''
     ) {
         // Create new admin tab
         $tab = new \Tab();
 
-        if ($parent != -1) {
-            $id_parent = SymfonyContainer::getInstance()
-                ->get('prestashop.core.admin.tab.repository')
-                ->findOneIdByClassName($parent);
-            // $id_parent = \Tab::getIdFromClassName($parent);
+        if ($parentTab != -1) {
+            $id_parent = $this->getIdTab($parentTab);
+
+            // Get Parent Tab
+            if (!$id_parent) {
+                $parentTab = new \Tab();
+                $parentTab->class_name = 'AdminOtherModulesMp';
+                $parentTab->module = null;
+                $parentTab->id_parent = 0;
+                $parentTab->active = 1;
+                $parentTab->icon = 'extension';
+                foreach (\Language::getLanguages() as $language) {
+                    $parentTab->name[$language['id_lang']] = $this->l('ALTRI MODULI');
+                }
+                $parentTab->add();
+
+                $id_parent = (int) $parentTab->id;
+            }
+
             $tab->id_parent = (int) $id_parent;
         } else {
             $tab->id_parent = -1;
@@ -83,97 +101,54 @@ class ModuleTemplate extends \Module
 
         $tab->name = [];
 
-        if (!is_array($name)) {
+        if (!is_array($tabLabel)) {
             foreach (\Language::getLanguages(true) as $lang) {
-                $tab->name[$lang['id_lang']] = $name;
+                $tab->name[$lang['id_lang']] = $tabLabel;
             }
         } else {
-            foreach ($name as $name_lang) {
-                $tab->name[$name_lang['id_lang']] = $name_lang['name'];
+            foreach ($tabLabel as $id_lang => $label) {
+                $tab->name[$id_lang] = $label;
             }
         }
 
-        $tab->class_name = $controller;
+        $tab->class_name = $adminController;
         $tab->module = $module_name;
         $tab->position = $position;
         $tab->icon = $icon;
         $tab->route_name = $route_name;
         $tab->enabled = $enabled;
         $tab->active = $active;
+        $tab->wording_domain = $wording_domain;
+        $tab->wording = $wording;
         $result = $tab->add();
 
         return $result;
     }
 
-    /**
-     * Uninstall a menu
-     *
-     * @param string|array $className Class name of the controller
-     *
-     * @return bool True if successful, False otherwise
-     */
-    public function uninstallMenu($className)
+    public function uninstallModuleTab($tab)
     {
-        $result = true;
-        if (is_array($className)) {
-            foreach ($className as $menu) {
-                $result = $result && $this->uninstallTab($menu);
-            }
-        } else {
-            $result = $this->uninstallTab($className);
-        }
+        $idTab = $this->getIdTab($tab);
+        $tab = new \Tab($idTab);
 
-        return $result;
+        if (\Validate::isLoadedObject($tab)) {
+            $tab->delete();
+        }
     }
 
-    private function uninstallModuleTab($className)
+    private function getIdTab(string $parent)
     {
-        $id_tab = \Tab::getIdFromClassName($className);
-        if ($id_tab) {
-            $tab = new \Tab((int) $id_tab);
+        $id_parent = SymfonyContainer::getInstance()
+            ->get('prestashop.core.admin.tab.repository')
+            ->findOneIdByClassName($parent);
 
-            return $tab->delete();
-        }
-
-        return true;
+        return (int) $id_parent;
     }
 
-    public static function insertValueAtPosition($arr, $insertedArray, $position)
+    public function renderTemplate($path, $params = [])
     {
-        $i = 0;
-        $new_array = [];
-        foreach ($arr as $key => $value) {
-            if ($i == $position) {
-                foreach ($insertedArray as $i_key => $i_value) {
-                    $new_array[$i_key] = $i_value;
-                }
-            }
-            $new_array[$key] = $value;
-            ++$i;
-        }
+        $twig = new GetTwigEnvironment($this->name);
+        $twig->load("@ModuleTwig/{$path}");
 
-        return $new_array;
-    }
-
-    public function registerHooks(\Module $module, array $hooks)
-    {
-        foreach ($hooks as $hook) {
-            if (!$module->registerHook($hook)) {
-                return false;
-            };
-        }
-
-        return true;
-    }
-
-    public function getIndexOfField($haystack, $needle)
-    {
-        $idx = 0;
-        foreach ($haystack as $key => $field) {
-            if ($key == $needle) {
-                return ++$idx;
-            }
-            ++$idx;
-        }
+        return $twig->render($params);
     }
 }

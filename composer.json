@@ -1,31 +1,51 @@
 {
+    "version": "1.0.0",
     "name": "mpsoft/mpmassimportproducts",
-    "description": "Importazione massiva prodotti",
+    "description": "Import Prestashop Catalog via Excel files",
+    "type": "prestashop-module",
+    "license": "AFL-3.0",
     "authors": [
         {
             "name": "Massimiliano Palermo",
             "email": "maxx.palermo@gmail.com"
         }
     ],
-    "require": {
-        "php": ">=7.4.0",
-        "prestashop/prestashop-webservice-lib": "dev-master",
-        "phpoffice/phpspreadsheet": "^3.3"
-    },
     "autoload": {
         "psr-4": {
-            "MpSoft\\MpMassImportProducts\\": "src/",
-            "MpSoft\\MpMassImportProducts\\WebServices\\": "vendor/prestashop/prestashop-webservice-lib/",
-            "MpSoft\\MpMassImportProducts\\Xlsx\\": "xlsx/",
-            "MpSoft\\MpMassImportProducts\\Plugins\\": "plugins/"
-        },
-        "classmap": [],
-        "exclude-from-classmap": [],
-        "files": []
+            "MpSoft\\MpMassImportProducts\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4.0",
+        "phpoffice/phpspreadsheet": "^1.29",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "prestashop/autoindex": "^2.1"
     },
     "config": {
+        "platform": {
+            "php": "7.4"
+        },
+        "platform-check": false,
+        "sort-packages": true,
+        "optimize-autoloader": true,
         "preferred-install": "dist",
         "prepend-autoloader": false
     },
-    "type": "prestashop-module"
+    "extra": {
+        "prestashop": {
+            "name": "mpmassimportproduct",
+            "displayName": "MP Mass Import Products",
+            "version": "1.0.0",
+            "description": "Import Prestashop catalog via Excel files.",
+            "author": "Massimiliano Palermo",
+            "tab": "administration",
+            "is_configurable": 1,
+            "need_instance": 0
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

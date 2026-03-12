@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -23,17 +24,11 @@ if (!defined('_PS_VERSION_')) {
 
 require_once dirname(__FILE__) . '/vendor/autoload.php';;
 
-use MpSoft\MpMassImportProducts\Models\ModelMassImportData;
 use MpSoft\MpMassImportProducts\Module\ModuleTemplate;
-use MpSoft\MpMassImportProducts\Plugins\Plugin;
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
 class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
 {
-    public $active_panel;
-    protected $mass_import_data;
-    protected $plugin_list = [];
-    protected $pluginClass;
     protected $adminClassName;
 
     public function __construct()
@@ -43,7 +38,6 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
         $this->version = '0.1.0';
         $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
-        $this->module_key = '';
         $this->bootstrap = true;
 
         parent::__construct();
@@ -51,12 +45,8 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
         $this->adminClassName = 'AdminMpMassImportProducts';
         $this->displayName = $this->l('MP Importazione massiva prodotti');
         $this->description = $this->l('Questo modulo importa i prodotti tramite i plugin a disposizione.');
-        $this->confirmUninstall = $this->l('Are you sure you want uninstall this module?');
-        $this->ps_versions_compliancy = ['min' => '8.0', 'max' => _PS_VERSION_];
-        $this->mass_import_data = new ModelMassImportData();
-        $pluginClass = new MpSoft\MpMassImportProducts\Plugins\Plugin($this);
-        $pluginClass->fetchPlugins();
-        $this->plugin_list = $pluginClass->getPlugins();
+        $this->confirmUninstall = $this->l('Sicuro di volere disinstallare questo modulo?');
+        $this->ps_versions_compliancy = ['min' => '8.2', 'max' => '8.99'];
     }
 
     public function getWidgetVariables($hookName, array $configuration)
@@ -77,18 +67,15 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
     {
         $hooks = [
             'actionAdminControllerSetMedia',
-            'actionFrontControllerSetMedia',
-            'displayPluginContent',
         ];
 
-        return parent::install()
-            && $this->registerHook($hooks)
-            && $this->installModuleTab(
+        return parent::install() &&
+            $this->registerHook($hooks) &&
+            $this->installModuleTab(
                 $this->l('MP Importazione Massiva'),
                 $this->name,
-                'AdminCatalog',
+                '',
                 'AdminMpMassImportProducts',
-                'fa-download',
             );
     }
 
@@ -96,24 +83,8 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
     {
         $controller = Tools::getValue('controller');
         if (Tools::strtolower($controller) === Tools::strtolower($this->adminClassName)) {
-            $this->context->controller->addCSS($this->_path . 'views/css/bootstrap.min.css');
-            $this->context->controller->addJS($this->_path . 'views/js/bootstrap.bundle.min.js');
             $this->context->controller->addJqueryPlugin('growl');
         }
-    }
-
-    public function hookActionFrontControllerSetMedia($params)
-    {
-        // nothing
-    }
-
-    public function hookDisplayPluginContent($params)
-    {
-        $plugin_name = $params['plugin_name'];
-        $this->pluginClass = new Plugin($this);
-        $plugin = $this->pluginClass->loadPlugin($plugin_name);
-
-        return $plugin->getContent();
     }
 
     public function getContent()
