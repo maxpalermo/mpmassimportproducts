@@ -35,7 +35,7 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
     {
         $this->name = 'mpmassimportproducts';
         $this->tab = 'administration';
-        $this->version = '0.1.0';
+        $this->version = '0.6.5';
         $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -75,8 +75,13 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
                 $this->l('MP Importazione Massiva'),
                 $this->name,
                 '',
-                'AdminMpMassImportProducts',
+                $this->adminClassName,
             );
+    }
+
+    public function uninstall()
+    {
+        return parent::uninstall() && $this->uninstallModuleTab($this->adminClassName);
     }
 
     public function hookActionAdminControllerSetMedia($params)
@@ -84,6 +89,7 @@ class MpMassImportProducts extends ModuleTemplate implements WidgetInterface
         $controller = Tools::getValue('controller');
         if (Tools::strtolower($controller) === Tools::strtolower($this->adminClassName)) {
             $this->context->controller->addJqueryPlugin('growl');
+            $this->context->controller->addJqueryPlugin('chosen');
         }
     }
 

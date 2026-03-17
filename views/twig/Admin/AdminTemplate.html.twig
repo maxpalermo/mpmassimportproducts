@@ -1,0 +1,1184 @@
+<div class="panel">
+    <div class="panel-heading">
+        <span class="material-icons">settings</span>
+        <span>Impostazioni</span>
+    </div>
+    <div class="panel-body">
+        <div class="panel">
+            <div class="panel-heading">
+                <span class="material-icons">bookmark</span>
+                <span>Template mappatura</span>
+            </div>
+            <div class="panel-body">
+                <form method="post" action="{{ endpoint }}" class="form-horizontal" id="mp-template-form">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div class="form-group">
+                        <label class="control-label col-lg-3">Template</label>
+                        <div class="col-lg-9">
+                            <select class="form-control" name="template_name" id="mp-template-select">
+                                <option value="">— Seleziona template —</option>
+                                {% for opt in mappingTemplates %}
+                                    <option value="{{ opt.value|e('html_attr') }}" {% if activeTemplateName == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if activeTemplateName %}
+                                <p class="help-block">Attivo: <strong>{{ activeTemplateName }}</strong></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <button type="submit" name="submitMpMassImportTemplateLoad" class="btn btn-default">
+                            Carica
+                        </button>
+                        <button type="submit" name="submitMpMassImportTemplateDelete" class="btn btn-danger" id="mp-template-delete">
+                            Elimina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <form method="post" action="{{ endpoint }}" class="form-horizontal" id="mp-default-category-form">
+                <div class="panel-heading">
+                    <span class="material-icons">settings</span>
+                    <span>Parametri</span>
+                </div>
+                <div class="panel-body">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div class="col-md-6">
+                        <div class="panel">
+                            <div class="panel-body">
+                                {% if hasCategoriesColumn %}
+                                    <div class="alert alert-info">La colonna <strong>CATEGORIES</strong> è attiva nella mappatura: la categoria di default verrà usata solo quando la colonna non è presente o non è importata.</div>
+                                {% else %}
+                                    <div class="alert alert-warning">La colonna <strong>CATEGORIES</strong> non è attiva: la categoria selezionata qui verrà usata come <strong>id_category_default</strong>.</div>
+                                {% endif %}
+                
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3">Categoria</label>
+                                    <div class="col-lg-9">
+                                        <select class="form-control js-default-category" name="default_category_id">
+                                            {% for opt in categoryOptions %}
+                                                <option value="{{ opt.id }}" {% if selectedDefaultCategoryId == opt.id %}selected{% endif %}>{{ opt.label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <p class="help-block">Valore salvato in Product: <strong>id_category_default</strong></p>
+                                    </div>
+    
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="panel">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label for="id_manufacturer">Produttore</label>
+                                    <select name="id_manufacturer" id="id_manufacturer" class="form-control chosen">
+                                        {% for opt in manufacturerOptions %}
+                                            <option value="{{ opt.id }}" {% if selectedDefaultManufacturerId == opt.id %}selected{% endif %}>{{ opt.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small>Seleziona un produttore di default</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_supplier">Fornitore</label>
+                                    <select name="id_supplier" id="id_supplier" class="form-control chosen">
+                                        {% for opt in supplierOptions %}
+                                            <option value="{{ opt.id }}" {% if selectedDefaultSupplierId == opt.id %}selected{% endif %}>{{ opt.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small>Seleziona un fornitore di default</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Lingua</label>
+                                    <input type="hidden" name="id_lang" value="{{ selectedDefaultLangId }}" id="mp-default-lang">
+                                    <div class="btn-group" role="group" aria-label="Lingua">
+                                        {% for lang in languageOptions %}
+                                            <button type="button" class="btn btn-default js-lang-btn {% if selectedDefaultLangId == lang.id %}active{% endif %}" data-lang-id="{{ lang.id }}" title="{{ lang.name|e('html_attr') }}">
+                                                <img src="/img/l/{{ lang.id }}.jpg" alt="{{ lang.name|e('html_attr') }}" style="height:16px; width:auto;">
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                    <small>Lingua usata come default per testi (es. nome/descrizione) quando necessario.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Duplicati (reference)</label>
+                                    <select name="duplicate_behavior" class="form-control">
+                                        <option value="overwrite" {% if selectedDuplicateBehavior|default('overwrite') == 'overwrite' %}selected{% endif %}>SOVRASCRIVI</option>
+                                        <option value="skip" {% if selectedDuplicateBehavior|default('overwrite') == 'skip' %}selected{% endif %}>SALTA</option>
+                                    </select>
+                                    <small>Se un reference è duplicato nel file, scegli se sovrascrivere il prodotto o saltare la riga.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Usa il prezzo originale come costo</label>
+                                    <span class="switch prestashop-switch fixed-width-lg">
+                                        <input type="radio" name="use_price_as_wholesale" id="use_price_as_wholesale_on" value="1" {% if selectedUsePriceAsWholesale %}checked{% endif %}>
+                                        <label for="use_price_as_wholesale_on">Sì</label>
+                                        <input type="radio" name="use_price_as_wholesale" id="use_price_as_wholesale_off" value="0" {% if not selectedUsePriceAsWholesale %}checked{% endif %}>
+                                        <label for="use_price_as_wholesale_off">No</label>
+                                        <a class="slide-button btn"></a>
+                                    </span>
+                                    <small>Se nel file importi <strong>price</strong>, il valore originale (senza ricarichi) verrà usato anche come <strong>wholesale_price</strong>.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>FORZA ID PRODOTTO</label>
+                                    <span class="switch prestashop-switch fixed-width-lg">
+                                        <input type="radio" name="force_id_product" id="force_id_product_on" value="1" {% if selectedForceIdProduct %}checked{% endif %}>
+                                        <label for="force_id_product_on">Sì</label>
+                                        <input type="radio" name="force_id_product" id="force_id_product_off" value="0" {% if not selectedForceIdProduct %}checked{% endif %}>
+                                        <label for="force_id_product_off">No</label>
+                                        <a class="slide-button btn"></a>
+                                    </span>
+                                    <small>Se attivo e nel file è presente la colonna <strong>id_product</strong> (o mappata a <strong>id_product</strong>), l'import userà quell'ID per creare/aggiornare il prodotto. Se la colonna non esiste, procede normalmente.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <button type="submit" name="submitMpMassImportDefaultParameters" class="btn btn-primary">
+                        Salva parametri
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <span class="material-icons">upload_file</span>
+                        <span>Carica file dati</span>
+                    </div>
+                    <div class="panel-body">
+                        {% if uploadedName %}
+                            <div class="alert alert-info">
+                                Ultimo file: <strong>{{ uploadedName }}</strong>
+                                {% if uploadedType %}
+                                    <span class="text-muted">({{ uploadedType }})</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if isLargeFile %}
+                            <div class="alert alert-warning">
+                                File grande rilevato.
+                                {% if fileSizeBytes %}
+                                    <span class="text-muted">({{ (fileSizeBytes / 1024 / 1024)|number_format(2, '.', '') }} MB)</span>
+                                {% endif %}
+                                <br>
+                                Per migliorare le prestazioni, per l'anteprima vengono analizzati solo gli header e le prime {{ previewRows|length }} righe.
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="panel">
+                                    <div class="panel-heading">Excel (.xlsx)</div>
+                                    <div class="panel-body">
+                                        <form method="post" action="{{ endpoint }}" enctype="multipart/form-data">
+                                            <input type="hidden" name="token" value="{{ token }}">
+                                            <input type="file" name="xlsx_file" accept=".xlsx" class="form-control">
+                                            <div class="m-t-1">
+                                                <button type="submit" name="submitMpMassImportUploadXlsx" class="btn btn-primary btn-block">
+                                                    Carica
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="panel">
+                                    <div class="panel-heading">CSV (.csv)</div>
+                                    <div class="panel-body">
+                                        <form method="post" action="{{ endpoint }}" enctype="multipart/form-data">
+                                            <input type="hidden" name="token" value="{{ token }}">
+                                            <input type="file" name="csv_file" accept=".csv" class="form-control">
+                                            <div class="row m-t-1">
+                                                <div class="col-lg-4">
+                                                    <label>Delimitatore</label>
+                                                    <input type="text" name="csv_settings[delimiter]" value="{% if csvSettings is defined %}{{ csvSettings.delimiter }}{% endif %}" class="form-control" maxlength="1" placeholder=",">
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label>Enclosure</label>
+                                                    <input type="text" name="csv_settings[enclosure]" value="{% if csvSettings is defined %}{{ csvSettings.enclosure }}{% endif %}" class="form-control" maxlength="1" placeholder='"'>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label>Escape</label>
+                                                    <input type="text" name="csv_settings[escape]" value="{% if csvSettings is defined %}{{ csvSettings.escape }}{% endif %}" class="form-control" maxlength="1" placeholder="\\">
+                                                </div>
+                                            </div>
+                                            <div class="m-t-1">
+                                                <button type="submit" name="submitMpMassImportUploadCsv" class="btn btn-primary btn-block">
+                                                    Carica
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="panel">
+                                    <div class="panel-heading">Da URL (file o .zip)</div>
+                                    <div class="panel-body">
+                                        <form method="post" action="{{ endpoint }}">
+                                            <input type="hidden" name="token" value="{{ token }}">
+                                            <input type="url" name="source_url" class="form-control" placeholder="https://.../file.xlsx oppure .csv oppure .zip" value="{% if lastURL %}{{ lastURL}}{% endif %}">
+
+                                            {% if lastZip is defined and lastZip.path is defined and lastZip.path %}
+                                                <div class="m-t-1">
+                                                    <label>ZIP salvato</label>
+                                                    <input type="text" class="form-control" value="{{ lastZip.path }}" readonly>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if lastZip is defined and lastZip.entries is defined and lastZip.entries is not empty %}
+                                                <div class="m-t-1">
+                                                    <label>File da analizzare (dentro lo ZIP)</label>
+                                                    <select name="zip_entry" class="form-control">
+                                                        {% for e in lastZip.entries %}
+                                                            <option value="{{ e|e('html_attr') }}" {% if lastZip.selected_entry is defined and lastZip.selected_entry == e %}selected{% endif %}>
+                                                                {{ e }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <p class="help-block">Se premi <strong>Scarica</strong> verrà riscaricato lo ZIP e verrà estratto il file selezionato.</p>
+                                                </div>
+                                            {% endif %}
+                                            <div class="m-t-1">
+                                                <button type="submit" name="submitMpMassImportUploadUrl" class="btn btn-primary btn-block">
+                                                    Scarica
+                                                </button>
+                                            </div>
+                                            <p class="help-block">Se l'URL punta a un <strong>.zip</strong>, verrà salvato in <strong>/download/mpmassimport</strong> e potrai scegliere quale file analizzare.</p>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <span class="material-icons">info</span>
+                        <span>Come funziona</span>
+                    </div>
+                    <div class="panel-body">
+                        <p>Carica un file <strong>.xlsx</strong>. Verranno letti gli header della prima riga.</p>
+                        <p>Per ogni header seleziona il campo della classe <strong>Product</strong> a cui associarlo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <span class="material-icons">table_view</span>
+                <span>Mappatura colonne</span>
+            </div>
+            <div class="panel-body">
+                {% if headers is empty %}
+                    <div class="alert alert-warning">Carica un file XLSX per vedere gli header.</div>
+                {% else %}
+                    <form method="post" action="{{ endpoint }}" class="form-horizontal" id="mp-mapping-form">
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <input type="hidden" name="template_name" value="" id="mp-template-name">
+                        <input type="hidden" name="template_overwrite" value="0" id="mp-template-overwrite">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%">Header XLSX</th>
+                                        <th style="width: 25%">Campo</th>
+                                        <th style="width: 23%">Regole</th>
+                                        <th style="width: 11%">Categorie</th>
+                                        <th style="width: 12%">Attributi</th>
+                                        <th style="width: 12%">Caratteristiche</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for header in headers %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ header }}</strong>
+                                            </td>
+                                            <td>
+                                                <select class="form-control js-header-map" data-header="{{ header|e('html_attr') }}" name="header_map[{{ header|e('html_attr') }}]">
+                                                    {% for opt in productFields %}
+                                                        {% set selected = '' %}
+                                                        {% if savedMapping[header] is defined %}
+                                                            {% if savedMapping[header] == opt.value %}
+                                                                {% set selected = 'selected' %}
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {% if autoMapping[header] is defined and autoMapping[header] == opt.value %}
+                                                                {% set selected = 'selected' %}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                        <option value="{{ opt.value|e('html_attr') }}" {{ selected }}>{{ opt.label }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                {% set vr = savedValidationRules[header] is defined ? savedValidationRules[header] : {} %}
+                                                {% set vrType = vr.type is defined ? vr.type : 'none' %}
+                                                {% set vrValue = vr.value is defined ? vr.value : '' %}
+                                                {% set vrMin = vr.min is defined ? vr.min : '' %}
+                                                {% set vrMax = vr.max is defined ? vr.max : '' %}
+
+                                                <select class="form-control js-validation-type" name="validation_rules[{{ header|e('html_attr') }}][type]">
+                                                    <option value="none" {% if vrType == 'none' %}selected{% endif %}>—</option>
+                                                    <option value="regex" {% if vrType == 'regex' %}selected{% endif %}>Regex</option>
+                                                    <option value="gte" {% if vrType == 'gte' %}selected{% endif %}>&gt;=</option>
+                                                    <option value="lte" {% if vrType == 'lte' %}selected{% endif %}>&lt;=</option>
+                                                    <option value="range" {% if vrType == 'range' %}selected{% endif %}>Range</option>
+                                                    <option value="in_list" {% if vrType == 'in_list' %}selected{% endif %}>Lista</option>
+                                                </select>
+
+                                                <div class="m-t-1 js-validation-value" {% if vrType in ['regex','gte','lte','in_list'] %}{% else %}style="display:none"{% endif %}>
+                                                    <input type="text" class="form-control" name="validation_rules[{{ header|e('html_attr') }}][value]" value="{{ vrValue|e('html_attr') }}" placeholder="valore / pattern / lista">
+                                                </div>
+
+                                                <div class="m-t-1 js-validation-range" {% if vrType == 'range' %}{% else %}style="display:none"{% endif %}>
+                                                    <div class="row">
+                                                        <div class="col-xs-6">
+                                                            <input type="text" class="form-control" name="validation_rules[{{ header|e('html_attr') }}][min]" value="{{ vrMin|e('html_attr') }}" placeholder="min">
+                                                        </div>
+                                                        <div class="col-xs-6">
+                                                            <input type="text" class="form-control" name="validation_rules[{{ header|e('html_attr') }}][max]" value="{{ vrMax|e('html_attr') }}" placeholder="max">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if headerMeta[header] is defined and headerMeta[header].type == 'category' %}
+                                                    <span class="label label-info">{{ headerMeta[header].name }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% set selectedMapping = savedMapping[header] is defined ? savedMapping[header] : (autoMapping[header] is defined ? autoMapping[header] : '') %}
+                                                {% set attributeAliasValue = '' %}
+                                                {% set defaultAttributeAlias = (header|slice(0, 2)|lower == 'a:') ? (header|slice(2)|trim) : header %}
+                                                {% if savedAttributeAlias is defined and savedAttributeAlias[header] is defined %}
+                                                    {% set attributeAliasValue = savedAttributeAlias[header] %}
+                                                {% else %}
+                                                    {% set attributeAliasValue = defaultAttributeAlias %}
+                                                {% endif %}
+
+                                                <div class="js-attribute-meta" data-default-alias="{{ defaultAttributeAlias|e('html_attr') }}" style="display:none">
+                                                    <span class="label label-warning js-editable-badge" data-edit-type="attribute">{{ attributeAliasValue }}</span>
+                                                    <input type="hidden" name="attribute_alias[{{ header|e('html_attr') }}]" value="{{ attributeAliasValue|e('html_attr') }}">
+                                                </div>
+                                                <div class="js-attribute-label">
+                                                    {% if headerMeta[header] is defined and headerMeta[header].type == 'attribute' %}
+                                                        <span class="label label-warning">{{ headerMeta[header].name }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% set featureAliasValue = '' %}
+                                                {% set defaultFeatureAlias = (header|slice(0, 2)|lower == 'f:') ? (header|slice(2)|trim) : header %}
+                                                {% if savedFeatureAlias is defined and savedFeatureAlias[header] is defined %}
+                                                    {% set featureAliasValue = savedFeatureAlias[header] %}
+                                                {% else %}
+                                                    {% set featureAliasValue = defaultFeatureAlias %}
+                                                {% endif %}
+
+                                                <div class="js-feature-meta" data-default-alias="{{ defaultFeatureAlias|e('html_attr') }}" style="display:none">
+                                                    <span class="label label-success js-editable-badge" data-edit-type="feature">{{ featureAliasValue }}</span>
+                                                    <input type="hidden" name="feature_alias[{{ header|e('html_attr') }}]" value="{{ featureAliasValue|e('html_attr') }}">
+                                                </div>
+                                                <div class="js-feature-label">
+                                                    {% if headerMeta[header] is defined and headerMeta[header].type == 'feature' %}
+                                                        <span class="label label-success">{{ headerMeta[header].name }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="panel-footer">
+                            <button type="submit" name="submitMpMassImportMapping" class="btn btn-success">
+                                Salva mappatura
+                            </button>
+                            <button type="submit" name="submitMpMassImportTemplateSave" class="btn btn-primary" id="mp-template-save">
+                                Salva come template
+                            </button>
+                            <button type="submit" name="submitMpMassImportTemplateSave" class="btn btn-default" id="mp-template-overwrite-save">
+                                Sovrascrivi template
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <span class="material-icons">paid</span>
+                <span>Prezzi</span>
+            </div>
+            <div class="panel-body">
+                <form method="post" action="{{ endpoint }}" class="form-horizontal" id="mp-price-form">
+                    <input type="hidden" name="token" value="{{ token }}">
+
+                    <div class="form-group">
+                        <label class="control-label col-lg-3">Aliquota IVA</label>
+                        <div class="col-lg-9">
+                            <select class="form-control js-tax-group" name="tax_rules_group_id">
+                                {% for opt in taxRuleGroupOptions %}
+                                    <option value="{{ opt.id }}" {% if selectedTaxRulesGroupId == opt.id %}selected{% endif %}>
+                                        {{ opt.label }}{% if opt.id != 0 %} ({{ opt.rate|number_format(2, '.', '') }}%){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <p class="help-block">Valore salvato in Product: <strong>id_tax_rules_group</strong></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <label class="control-label col-lg-3">Ricarico per fascia</label>
+                        <div class="col-lg-9">
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="mp-markup-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Min</th>
+                                            <th>Max</th>
+                                            <th>Tipo</th>
+                                            <th>+IVA</th>
+                                            <th>Valore</th>
+                                            <th>Step</th>
+                                            <th>Round</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if markupRules is empty %}
+                                            <tr class="mp-markup-row">
+                                                <td><input type="text" class="form-control" name="markup_rules[0][min]" value=""></td>
+                                                <td><input type="text" class="form-control" name="markup_rules[0][max]" value=""></td>
+                                                <td>
+                                                    <select class="form-control" name="markup_rules[0][type]">
+                                                        <option value="percent">%</option>
+                                                        <option value="fixed">€</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control fixed-width-sm" name="markup_rules[0][vat_mode]">
+                                                        <option value="no">NO</option>
+                                                        <option value="si">SI</option>
+                                                        <option value="scorpora">SCORPORA</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="form-control" name="markup_rules[0][value]" value="" placeholder="es. 7% oppure 3.50"></td>
+                                                <td><input type="text" class="form-control" name="markup_rules[0][round_step]" value="" placeholder="0.50"></td>
+                                                <td>
+                                                    <select class="form-control fixed-width-sm" name="markup_rules[0][round_mode]">
+                                                        <option value="ceil">SUP</option>
+                                                        <option value="round">ARR</option>
+                                                        <option value="floor">INF</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-default js-markup-remove">-</button>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            {% for r in markupRules %}
+                                                <tr class="mp-markup-row">
+                                                    <td><input type="text" class="form-control" name="markup_rules[{{ loop.index0 }}][min]" value="{{ r.min|default('') }}"></td>
+                                                    <td><input type="text" class="form-control" name="markup_rules[{{ loop.index0 }}][max]" value="{{ r.max is defined and r.max is not null ? r.max : '' }}"></td>
+                                                    <td>
+                                                        <select class="form-control" name="markup_rules[{{ loop.index0 }}][type]">
+                                                            <option value="percent" {% if r.type|default('percent') == 'percent' %}selected{% endif %}>%</option>
+                                                            <option value="fixed" {% if r.type|default('percent') == 'fixed' %}selected{% endif %}>€</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-control fixed-width-sm" name="markup_rules[{{ loop.index0 }}][vat_mode]">
+                                                            <option value="no" {% if r.vat_mode|default('no') == 'no' %}selected{% endif %}>NO</option>
+                                                            <option value="si" {% if r.vat_mode|default('no') == 'si' %}selected{% endif %}>SI</option>
+                                                            <option value="scorpora" {% if r.vat_mode|default('no') == 'scorpora' %}selected{% endif %}>SCORPORA</option>
+                                                        </select>
+                                                    </td>
+                                                    {% set displayValue = r.value|default('') %}
+                                                    {% if r.type|default('fixed') == 'percent' and displayValue is not empty %}
+                                                        {% set displayValue = displayValue ~ '%' %}
+                                                    {% endif %}
+                                                    <td><input type="text" class="form-control" name="markup_rules[{{ loop.index0 }}][value]" value="{{ displayValue }}" placeholder="es. 7% oppure 3.50"></td>
+                                                    <td><input type="text" class="form-control" name="markup_rules[{{ loop.index0 }}][round_step]" value="{{ r.round_step|default('') }}" placeholder="0.50"></td>
+                                                    <td>
+                                                        <select class="form-control fixed-width-sm" name="markup_rules[{{ loop.index0 }}][round_mode]">
+                                                            <option value="ceil" {% if r.round_mode|default('ceil') == 'ceil' %}selected{% endif %}>SUP</option>
+                                                            <option value="round" {% if r.round_mode|default('ceil') == 'round' %}selected{% endif %}>ARR</option>
+                                                            <option value="floor" {% if r.round_mode|default('ceil') == 'floor' %}selected{% endif %}>INF</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-default js-markup-remove">-</button>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-default" id="mp-markup-add">Aggiungi fascia</button>
+                            <p class="help-block">La prima fascia che matcha il prezzo viene applicata.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-footer">
+                        <button type="submit" name="submitMpMassImportPriceSettings" class="btn btn-primary">
+                            Salva prezzi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <span class="material-icons">visibility</span>
+                <span>Preview dati (prime {{ previewRows|length }} righe)</span>
+            </div>
+            <div class="panel-body">
+                {% if validationReport is defined and validationReport.invalid_rows|default(0) > 0 %}
+                    <div class="alert alert-warning">
+                        {{ validationReport.invalid_rows }} righe della preview non rispettano le regole e verrebbero saltate in import.
+                        {% if validationReport.errors is defined and validationReport.errors is not empty %}
+                            <div class="m-t-1">
+                                <strong>Esempi:</strong>
+                                <ul>
+                                    {% for e in validationReport.errors %}
+                                        <li>Riga {{ e.row }}, colonna <strong>{{ e.header }}</strong>: {{ e.message }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                {% if previewRows is empty or headers is empty %}
+                    <div class="alert alert-info">Carica un file XLSX per visualizzare la preview.</div>
+                {% else %}
+                    {% set visibleHeaders = [] %}
+                    {% set headerIndexes = [] %}
+                    {% for header in headers %}
+                        {% if effectiveMapping[header] is defined and effectiveMapping[header] != '' %}
+                            {% set visibleHeaders = visibleHeaders|merge([header]) %}
+                            {% set headerIndexes = headerIndexes|merge({ (header): loop.index0 }) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if visibleHeaders is empty %}
+                        <div class="alert alert-info">Nessuna colonna da importare selezionata.</div>
+                    {% else %}
+                    <div class="mp-preview-table-wrapper">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    {% for header in visibleHeaders %}
+                                        <th>
+                                            {{ header }}
+                                            {% set isAttrMapped = effectiveMapping[header] is defined and effectiveMapping[header] == '__ATTRIBUTE__' %}
+                                            {% set isFeatMapped = effectiveMapping[header] is defined and effectiveMapping[header] == '__FEATURE__' %}
+
+                                            {% if isAttrMapped or isFeatMapped or (headerMeta[header] is defined and headerMeta[header].type != 'normal') %}
+                                                <br>
+
+                                                {% if headerMeta[header] is defined and headerMeta[header].type == 'category' %}
+                                                    <span class="label label-info">CATEGORIE</span>
+                                                {% endif %}
+
+                                                {% if isAttrMapped %}
+                                                    {% set defAlias = (header|slice(0, 2)|lower == 'a:') ? (header|slice(2)|trim) : header %}
+                                                    {% set alias = (savedAttributeAlias is defined and savedAttributeAlias[header] is defined) ? savedAttributeAlias[header] : defAlias %}
+                                                    <span class="label label-warning">(A) {{ alias }}</span>
+                                                {% elseif headerMeta[header] is defined and headerMeta[header].type == 'attribute' %}
+                                                    <span class="label label-warning">A: {{ headerMeta[header].name }}</span>
+                                                {% endif %}
+
+                                                {% if isFeatMapped %}
+                                                    {% set defAlias = (header|slice(0, 2)|lower == 'f:') ? (header|slice(2)|trim) : header %}
+                                                    {% set alias = (savedFeatureAlias is defined and savedFeatureAlias[header] is defined) ? savedFeatureAlias[header] : defAlias %}
+                                                    <span class="label label-success">(C) {{ alias }}</span>
+                                                {% elseif headerMeta[header] is defined and headerMeta[header].type == 'feature' %}
+                                                    <span class="label label-success">F: {{ headerMeta[header].name }}</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </th>
+                                    {% endfor %}
+
+                                    {% if previewPrice is defined and previewPrice.enabled %}
+                                        <th>ALIQUOTA IVA</th>
+                                        <th>RICARICO</th>
+                                        <th>PREZZO (IVA INCL.)</th>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    {% for header in visibleHeaders %}
+                                        <th>
+                                            <small class="text-muted">
+                                                {% if effectiveMapping[header] is defined and effectiveMapping[header] %}
+                                                    {{ effectiveMapping[header] }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </small>
+                                        </th>
+                                    {% endfor %}
+
+                                    {% if previewPrice is defined and previewPrice.enabled %}
+                                        <th>
+                                            <small class="text-muted">
+                                                id_tax_rules_group={{ previewPrice.tax_rules_group_id }} ({{ previewPrice.tax_rate|number_format(2, '.', '') }}%)
+                                            </small>
+                                        </th>
+                                        <th>
+                                            <small class="text-muted">regole fascia</small>
+                                        </th>
+                                        <th>
+                                            <small class="text-muted">calcolo finale</small>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in previewRows %}
+                                    <tr>
+                                        {% for header in visibleHeaders %}
+                                            {% set i = headerIndexes[header] is defined ? headerIndexes[header] : loop.index0 %}
+                                            <td>
+                                                {% set cell = row[i] is defined ? row[i] : '' %}
+                                                {% set isImageCol = (effectiveMapping[header] is defined and effectiveMapping[header] == '__IMAGES__') or (headerMeta[header] is defined and headerMeta[header].type == 'image') %}
+
+                                                {% if isImageCol and cell %}
+                                                    <div class="mp-thumb-list">
+                                                        {% set parts = cell|split('|') %}
+                                                        {% for p in parts %}
+                                                            {% set url = p|trim %}
+                                                            {% if url %}
+                                                                <div class="mp-thumb">
+                                                                    <img src="{{ url|e('html_attr') }}" alt="" loading="lazy">
+                                                                    {% if loop.first %}
+                                                                        <span class="mp-thumb-badge">cover</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ cell|slice(0, 120) }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+
+                                        {% if previewPrice is defined and previewPrice.enabled %}
+                                            {% set p = previewPrice.rows[loop.index0] is defined ? previewPrice.rows[loop.index0] : {} %}
+                                            <td>
+                                                {% if previewPrice.tax_rules_group_id %}
+                                                    <span class="label label-info">{{ previewPrice.tax_rate|number_format(2, '.', '') }}%</span>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if p.markup_label is defined and p.markup_label %}
+                                                    <span class="label label-default">{{ p.markup_label }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if p.final_incl is defined and p.final_incl is not null %}
+                                                    <strong>{{ p.final_incl|number_format(2, '.', '') }}</strong>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button type="button" class="btn btn-primary" id="mp-start-import" {% if not uploadedPath %}disabled{% endif %}>
+            Avvia import
+        </button>
+        <span class="text-muted" style="margin-left:10px;" id="mp-import-file-info">
+            {% if uploadedPath %}
+                {% set s = fileSizeBytes is defined ? fileSizeBytes : 0 %}
+                {% if s >= 1073741824 %}
+                    {% set humanSize = (s / 1073741824)|number_format(2, '.', '') ~ ' GB' %}
+                {% elseif s >= 1048576 %}
+                    {% set humanSize = (s / 1048576)|number_format(2, '.', '') ~ ' MB' %}
+                {% elseif s >= 1024 %}
+                    {% set humanSize = (s / 1024)|number_format(2, '.', '') ~ ' KB' %}
+                {% else %}
+                    {% set humanSize = s ~ ' B' %}
+                {% endif %}
+                <strong>File:</strong> {{ uploadedName ? uploadedName : '—' }}
+                <span style="margin-left:8px;"><strong>Percorso:</strong> {{ uploadedPath }}</span>
+                <span style="margin-left:8px;"><strong>Dimensione:</strong> {{ humanSize }}</span>
+            {% else %}
+                <strong>File:</strong> —
+            {% endif %}
+        </span>
+        <span class="text-muted" style="margin-left:10px;" id="mp-import-hint"></span>
+    </div>
+</div>
+
+<style>
+    .mp-preview-table-wrapper {
+        overflow: auto;
+        max-height: 520px;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+    }
+
+    .mp-preview-table-wrapper table {
+        margin: 0;
+        min-width: 100%;
+    }
+
+    .mp-preview-table-wrapper thead th {
+        position: sticky;
+        z-index: 2;
+        background: #fff;
+        box-shadow: inset 0 -1px 0 #ddd;
+        white-space: nowrap;
+    }
+
+    .mp-preview-table-wrapper thead tr:first-child th {
+        top: 0;
+        z-index: 3;
+    }
+
+    .mp-preview-table-wrapper thead tr:nth-child(2) th {
+        top: 44px;
+        z-index: 2;
+        background: #f9f9f9;
+    }
+
+    .mp-preview-table-wrapper td {
+        white-space: nowrap;
+        max-width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mp-thumb-list {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .mp-thumb {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #fff;
+        overflow: hidden;
+        flex: 0 0 auto;
+    }
+
+    .mp-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .mp-thumb-badge {
+        position: absolute;
+        left: 2px;
+        bottom: 2px;
+        padding: 1px 4px;
+        font-size: 10px;
+        line-height: 1.2;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 3px;
+    }
+</style>
+
+<script src="{{ importManagerJs|e('html_attr') }}"></script>
+
+<script>
+    (function () {
+        function initMpImportButton($) {
+            var uploadedPath = ('{{ uploadedPath|e('js') }}' || '').toString();
+            var uploadedType = ('{{ uploadedType|e('js') }}' || '').toString();
+            var endpoint = '{{ endpoint|e('js') }}';
+            var token = '{{ token|e('js') }}';
+
+            function getTemplateName() {
+                var el = document.getElementById('mp-template-select');
+                return el ? (el.value || '').toString().trim() : '';
+            }
+
+            function setHint(text) {
+                var hint = document.getElementById('mp-import-hint');
+                if (hint) {
+                    hint.textContent = text || '';
+                }
+            }
+
+            function updateImportButtonState() {
+                var btn = document.getElementById('mp-start-import');
+                if (!btn) {
+                    return;
+                }
+                if (!uploadedPath || !uploadedType) {
+                    btn.disabled = true;
+                    setHint('Carica un file prima di avviare l\'import.');
+                    return;
+                }
+                var templateName = getTemplateName();
+                if (!templateName) {
+                    btn.disabled = true;
+                    setHint('Seleziona un template prima di avviare l\'import.');
+                    return;
+                }
+                btn.disabled = false;
+                setHint('');
+            }
+
+            function collectDefaults() {
+                var q = function (sel) {
+                    var el = document.querySelector(sel);
+                    return el ? el.value : '';
+                };
+                return {
+                    id_category_default: parseInt((q('select[name="default_category_id"]') || '0'), 10) || 0,
+                    id_manufacturer: parseInt((q('select[name="id_manufacturer"]') || '0'), 10) || 0,
+                    id_supplier: parseInt((q('select[name="id_supplier"]') || '0'), 10) || 0,
+                    id_lang: parseInt((q('#mp-default-lang') || '0'), 10) || 0,
+                    duplicate_behavior: (q('select[name="duplicate_behavior"]') || 'overwrite'),
+                    force_id_product: (function () {
+                        var el = document.querySelector('input[name="force_id_product"]:checked');
+                        return !!(el && String(el.value) === '1');
+                    })(),
+                    use_price_as_wholesale: (function () {
+                        var el = document.querySelector('input[name="use_price_as_wholesale"]:checked');
+                        return !!(el && String(el.value) === '1');
+                    })()
+                };
+            }
+
+            function collectPriceSettings() {
+                var el = document.querySelector('select[name="tax_rules_group_id"]');
+                return {
+                    id_tax_rules_group: parseInt(((el && el.value) || '0'), 10) || 0
+                };
+            }
+
+            function startImport() {
+                if (!window.MpMassImportProductsImportManager) {
+                    window.alert('ImportManager non caricato. Verifica che il file JS sia raggiungibile.');
+                    return;
+                }
+                var templateName = getTemplateName();
+                if (!templateName) {
+                    window.alert('Seleziona un template prima di avviare l\'import.');
+                    return;
+                }
+                if (!uploadedPath || !uploadedType) {
+                    window.alert('Carica un file prima di avviare l\'import.');
+                    return;
+                }
+
+                var ok = window.confirm('Vuoi procedere con l\'importazione dei prodotti?');
+                if (!ok) {
+                    return;
+                }
+
+                var mgr = new window.MpMassImportProductsImportManager({
+                    url: endpoint,
+                    token: token,
+                    action: 'mpMassImportProductsImportChunk',
+                    templateName: templateName,
+                    filePath: uploadedPath,
+                    fileType: uploadedType,
+                    defaults: collectDefaults(),
+                    priceSettings: collectPriceSettings(),
+                    buildPayload: function (payload) {
+                        payload.csv_settings = {
+                            delimiter: '{% if csvSettings is defined %}{{ csvSettings.delimiter|e('js') }}{% endif %}',
+                            enclosure: '{% if csvSettings is defined %}{{ csvSettings.enclosure|e('js') }}{% endif %}',
+                            escape: '{% if csvSettings is defined %}{{ csvSettings.escape|e('js') }}{% endif %}'
+                        };
+                        return payload;
+                    },
+                    limit: 25
+                });
+                mgr.start();
+            }
+
+            var btn = document.getElementById('mp-start-import');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    if (btn.disabled) {
+                        updateImportButtonState();
+                        return;
+                    }
+                    startImport();
+                });
+            }
+
+            var tplSel = document.getElementById('mp-template-select');
+            if (tplSel) {
+                tplSel.addEventListener('change', updateImportButtonState);
+            }
+
+            updateImportButtonState();
+
+            if ($ && $.fn && $.fn.chosen) {
+                $('.chosen').chosen({ width: '100%' });
+            }
+        }
+
+        if (window.$) {
+            $(function () {
+                initMpImportButton(window.$);
+
+                if ($.fn && $.fn.chosen) {
+                    $('.chosen').chosen({
+                        width: '100%'
+                    });
+                }
+
+                function updateAliasInputs($row) {
+                var val = $row.find('.js-header-map').val();
+                var $attributeMeta = $row.find('.js-attribute-meta');
+                var $attributeLabel = $row.find('.js-attribute-label');
+                var $featureMeta = $row.find('.js-feature-meta');
+                var $featureLabel = $row.find('.js-feature-label');
+
+                var $attributeHidden = $attributeMeta.find('input[type="hidden"]');
+                var $featureHidden = $featureMeta.find('input[type="hidden"]');
+                var $attributeBadge = $attributeMeta.find('.js-editable-badge');
+                var $featureBadge = $featureMeta.find('.js-editable-badge');
+
+                if (val === '__ATTRIBUTE__') {
+                    $attributeMeta.show();
+                    $attributeLabel.hide();
+
+                    if ($attributeHidden.val() === '') {
+                        $attributeHidden.val($attributeMeta.data('default-alias') || '');
+                    }
+                    $attributeBadge.text($attributeHidden.val());
+                } else {
+                    $attributeMeta.hide();
+                    $attributeLabel.show();
+                }
+
+                if (val === '__FEATURE__') {
+                    $featureMeta.show();
+                    $featureLabel.hide();
+
+                    if ($featureHidden.val() === '') {
+                        $featureHidden.val($featureMeta.data('default-alias') || '');
+                    }
+                    $featureBadge.text($featureHidden.val());
+                } else {
+                    $featureMeta.hide();
+                    $featureLabel.show();
+                }
+            }
+
+            function updateValidationInputs($tr) {
+                var type = ($tr.find('.js-validation-type').val() || 'none');
+                var showValue = (type === 'regex' || type === 'gte' || type === 'lte' || type === 'in_list');
+                var showRange = (type === 'range');
+
+                $tr.find('.js-validation-value').toggle(showValue);
+                $tr.find('.js-validation-range').toggle(showRange);
+            }
+
+            function startBadgeEdit($badge) {
+                if ($badge.data('editing')) {
+                    return;
+                }
+                $badge.data('editing', 1);
+
+                var $meta = $badge.closest('.js-attribute-meta, .js-feature-meta');
+                var $hidden = $meta.find('input[type="hidden"]');
+                var current = ($hidden.val() || '').trim();
+                var def = ($meta.data('default-alias') || '').toString();
+                if (current === '') {
+                    current = def;
+                }
+
+                var cls = $badge.attr('class');
+                var $input = $('<input type="text" class="form-control" />');
+                $input.val(current);
+
+                $badge.hide();
+                $input.insertAfter($badge);
+                $input.focus();
+
+                function commit() {
+                    var v = ($input.val() || '').trim();
+                    if (v === '') {
+                        v = def;
+                    }
+                    $hidden.val(v);
+                    $badge.text(v);
+                    $input.remove();
+                    $badge.show();
+                    $badge.data('editing', 0);
+                }
+
+                $input.on('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commit();
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        $input.remove();
+                        $badge.show();
+                        $badge.data('editing', 0);
+                    }
+                });
+
+                $input.on('blur', function () {
+                    commit();
+                });
+            }
+
+            $('.js-header-map').each(function () {
+                updateAliasInputs($(this).closest('tr'));
+            });
+
+            $('.js-validation-type').each(function () {
+                updateValidationInputs($(this).closest('tr'));
+            });
+
+            $(document).on('change', '.js-header-map', function () {
+                updateAliasInputs($(this).closest('tr'));
+            });
+
+            $(document).on('change', '.js-validation-type', function () {
+                updateValidationInputs($(this).closest('tr'));
+            });
+
+            $(document).on('click', '.js-lang-btn', function () {
+                var id = $(this).data('lang-id');
+                $('.js-lang-btn').removeClass('active');
+                $(this).addClass('active');
+                $('#mp-default-lang').val(id);
+            });
+
+            $(document).on('dblclick', '.js-editable-badge', function () {
+                startBadgeEdit($(this));
+            });
+
+            function renumberMarkupRows() {
+                $('#mp-markup-table tbody tr.mp-markup-row').each(function (idx) {
+                    $(this).find('input, select').each(function () {
+                        var name = $(this).attr('name');
+                        if (!name) {
+                            return;
+                        }
+                        name = name.replace(/markup_rules\[\d+\]/, 'markup_rules[' + idx + ']');
+                        $(this).attr('name', name);
+                    });
+                });
+            }
+
+            $('#mp-markup-add').on('click', function () {
+                var $tbody = $('#mp-markup-table tbody');
+                var idx = $tbody.find('tr.mp-markup-row').length;
+                var $row = $('<tr class="mp-markup-row">' +
+                    '<td><input type="text" class="form-control" name="markup_rules[' + idx + '][min]" value=""></td>' +
+                    '<td><input type="text" class="form-control" name="markup_rules[' + idx + '][max]" value=""></td>' +
+                    '<td><select class="form-control" name="markup_rules[' + idx + '][type]"><option value="percent">%</option><option value="fixed">€</option></select></td>' +
+                    '<td><select class="form-control fixed-width-sm" name="markup_rules[' + idx + '][vat_mode]"><option value="no">NO</option><option value="si">SI</option><option value="scorpora">SCORPORA</option></select></td>' +
+                    '<td><input type="text" class="form-control" name="markup_rules[' + idx + '][value]" value=""></td>' +
+                    '<td><input type="text" class="form-control" name="markup_rules[' + idx + '][round_step]" value="" placeholder="0.50"></td>' +
+                    '<td><select class="form-control fixed-width-sm" name="markup_rules[' + idx + '][round_mode]"><option value="ceil">SUP</option><option value="round">ARR</option><option value="floor">INF</option></select></td>' +
+                    '<td><button type="button" class="btn btn-default js-markup-remove">-</button></td>' +
+                '</tr>');
+                $tbody.append($row);
+                renumberMarkupRows();
+            });
+
+            $(document).on('click', '.js-markup-remove', function () {
+                var $rows = $('#mp-markup-table tbody tr.mp-markup-row');
+                if ($rows.length <= 1) {
+                    $(this).closest('tr').find('input').val('');
+                    return;
+                }
+                $(this).closest('tr').remove();
+                renumberMarkupRows();
+            });
+
+            $('#mp-template-delete').on('click', function (e) {
+                var name = $('#mp-template-select').val();
+                if (!name) {
+                    return;
+                }
+                if (!window.confirm('Eliminare il template "' + name + '"?')) {
+                    e.preventDefault();
+                }
+            });
+
+            $('#mp-template-save').on('click', function (e) {
+                var name = window.prompt('Nome template (unico):');
+                if (!name) {
+                    e.preventDefault();
+                    return;
+                }
+                $('#mp-template-name').val(name);
+                $('#mp-template-overwrite').val('0');
+            });
+
+            $('#mp-template-overwrite-save').on('click', function (e) {
+                var selected = $('#mp-template-select').val();
+                if (!selected) {
+                    e.preventDefault();
+                    window.alert('Seleziona un template da sovrascrivere.');
+                    return;
+                }
+                $('#mp-template-name').val(selected);
+                $('#mp-template-overwrite').val('1');
+            });
+        });
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+                initMpImportButton(null);
+            });
+        }
+    })();
+</script>

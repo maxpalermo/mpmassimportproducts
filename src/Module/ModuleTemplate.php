@@ -76,18 +76,21 @@ class ModuleTemplate extends \Module
 
             // Get Parent Tab
             if (!$id_parent) {
-                $parentTab = new \Tab();
-                $parentTab->class_name = 'AdminOtherModulesMp';
-                $parentTab->module = null;
-                $parentTab->id_parent = 0;
-                $parentTab->active = 1;
-                $parentTab->icon = 'extension';
-                foreach (\Language::getLanguages() as $language) {
-                    $parentTab->name[$language['id_lang']] = $this->l('ALTRI MODULI');
-                }
-                $parentTab->add();
+                $id_parent = $this->getIdTab('AdminOtherModulesMp');
+                if (!$id_parent) {
+                    $parentTab = new \Tab();
+                    $parentTab->class_name = 'AdminOtherModulesMp';
+                    $parentTab->module = null;
+                    $parentTab->id_parent = 0;
+                    $parentTab->active = 1;
+                    $parentTab->icon = 'extension';
+                    foreach (\Language::getLanguages() as $language) {
+                        $parentTab->name[$language['id_lang']] = $this->l('ALTRI MODULI');
+                    }
+                    $parentTab->add();
 
-                $id_parent = (int) $parentTab->id;
+                    $id_parent = (int) $parentTab->id;
+                }
             }
 
             $tab->id_parent = (int) $id_parent;
@@ -133,6 +136,8 @@ class ModuleTemplate extends \Module
         if (\Validate::isLoadedObject($tab)) {
             $tab->delete();
         }
+
+        return true;
     }
 
     private function getIdTab(string $parent)
